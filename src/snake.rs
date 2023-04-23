@@ -1,4 +1,3 @@
-use std::vec;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use crate::{WINDOW_HEIGHT, WINDOW_WIDTH};
@@ -12,15 +11,27 @@ pub enum Board {
     SnakeBody(Entity),
     Empty
 }
+
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub enum Facing {
+    Up,
+    Left,
+    Right,
+    Down
+}
+
 #[derive(Resource)]
 pub struct SnakeBoard {
     board: Vec<Vec<Board>>,
+    facing: Facing,
 } 
 impl SnakeBoard {
 
     pub fn new(width: usize, height: usize) -> Self {
         let mut new_board = Self {
-            board: Vec::new()
+            board: Vec::new(),
+            facing: Facing::Right,
         };
 
         for x in 0..width/CELL_SIZE as usize {
@@ -42,14 +53,15 @@ impl SnakeBoard {
     }
 
     pub fn start(&mut self) -> Vec<(usize, usize)> {
-        let middle: usize = self.board.len()/2;
-        let other_middle: usize = self.board[middle].len()/2;
+        let middle: usize = self.board.len()/2 +1 ;
+        let other_middle: usize = self.board[middle].len()/2 +1;
         let mut references: Vec<(usize, usize)> = Vec::new();
         for i in 0..4 {
             references.push(((other_middle - i) as usize, middle));
         }
         references
     }
+
 }
 
 
@@ -65,12 +77,14 @@ pub fn setup(
     let mut color = Color::DARK_GRAY;
 
     for x in ((-WINDOW_WIDTH/2.) as isize..(WINDOW_WIDTH/2.) as isize)
-        .map(|i| i as f32).filter(|f| f%CELL_SIZE == 0.) {
-
-        color = if color == Color::DARK_GRAY { Color::GRAY } else { Color::DARK_GRAY };
+        .map(|i| i as f32).filter(|f| (f+WINDOW_WIDTH/2.)%CELL_SIZE == 0.) {
+        
+        if WINDOW_HEIGHT/CELL_SIZE%2. == 0. {
+            color = if color == Color::DARK_GRAY { Color::GRAY } else { Color::DARK_GRAY };
+        } 
 
         for y in ((-WINDOW_HEIGHT/2.) as isize..(WINDOW_HEIGHT/2.) as isize)
-            .map(|i| i as f32).filter(|f| f%CELL_SIZE == 0.) {
+            .map(|i| i as f32).filter(|f| (f+WINDOW_HEIGHT/2.)%CELL_SIZE == 0.) {
 
             color = if color == Color::DARK_GRAY { Color::GRAY } else { Color::DARK_GRAY };
 
@@ -83,7 +97,7 @@ pub fn setup(
         }
     }
     
-    let middle: usize = snake_board.board.len()/2;
+    let middle: usize = snake_board.board.len()/2 +1;
     for (x, y) in snake_board.start() {
         let entity = cmd.spawn(MaterialMesh2dBundle {
             mesh: meshes.add(shape::Quad::new(Vec2::new(CELL_SIZE, CELL_SIZE)).into()).into(),
@@ -105,4 +119,22 @@ pub fn setup(
         }
     }
     
+}
+
+pub fn movement(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut snake_board: ResMut<SnakeBoard>,
+) {
+    if keyboard_input.just_pressed(KeyCode::W) || keyboard_input.just_pressed(KeyCode::Up) {
+        snake_board.facing = Facing::Up;
+    } else 
+    if keyboard_input.just_pressed(KeyCode::A) || keyboard_input.just_pressed(KeyCode::Left) {
+        snake_board.facing = Facing::Left;
+    } else 
+    if keyboard_input.just_pressed(KeyCode::D) || keyboard_input.just_pressed(KeyCode::Right) {
+        snake_board.facing = Facing::Right;
+    } else 
+    if keyboard_input.just_pressed(KeyCode::S) || keyboard_input.just_pressed(KeyCode::Down) {
+        snake_board.facing = Facing::Down;
+    }
 }

@@ -2,8 +2,8 @@ use::bevy::prelude::*;
 
 mod snake;
 
-const WINDOW_HEIGHT: f32 = 500.;
-const WINDOW_WIDTH: f32 = 500.;
+const WINDOW_HEIGHT: f32 = 550.;
+const WINDOW_WIDTH: f32 = 550.;
 
 fn main() {
     App::new()
